@@ -1,6 +1,0 @@
-use_frameworks!
-target 'AMZUtils_Tests' do
-  pod 'AMZUtils', :path => '../'
-  
-  
-end

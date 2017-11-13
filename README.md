@@ -22,7 +22,7 @@ pod 'AMZUtils'
 
 ## Author
 
-AliZahr, ali_zahr@hotmail.com
+Ali Zahr, ali_zahr@hotmail.com
 
 ## License
 
