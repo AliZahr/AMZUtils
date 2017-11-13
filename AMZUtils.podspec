@@ -12,11 +12,13 @@ AMZUtils is a starter kit that can be used in any project. It contains a set of 
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'AliZahr' => 'ali_zahr@hotmail.com' }
   s.source           = { :git => 'https://github.com/AliZahr/AMZUtils.git', :tag => s.version.to_s }
+  s.platform = :ios, '9.0'
+
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '9.0'
 
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'AMZUtils/**/*'
 
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
