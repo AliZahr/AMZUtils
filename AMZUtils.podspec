@@ -18,7 +18,6 @@ AMZUtils is a starter kit that can be used in any project. It contains a set of 
 
   s.source_files = 'Classes/**/*'
 
-  # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
 end
