@@ -149,8 +149,21 @@
         [self.widthAnchor constraintEqualToConstant:width].active = YES;
     }
 }
-// Animation
-
+- (void)removeConstraints
+{
+    UIView *superview = self.superview;
+    while (superview != nil) {
+        for (NSLayoutConstraint *c in superview.constraints) {
+            if (c.firstItem == self || c.secondItem == self) {
+                [superview removeConstraint:c];
+            }
+        }
+        superview = superview.superview;
+    }
+    
+    [self removeConstraints:self.constraints];
+    self.translatesAutoresizingMaskIntoConstraints = YES;
+}
 - (void)ShowWithAnimation
 {
     UIViewController *topController = [UIApplication sharedApplication].keyWindow.rootViewController;
