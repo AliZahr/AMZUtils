@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'AMZUtils'
-  s.version          = '1.0.3'
+  s.version          = '1.0.4'
   s.summary          = 'AMZUtils is a starter kit that can be used in any project.'
 
   s.description      = <<-DESC
