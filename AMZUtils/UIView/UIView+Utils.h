@@ -7,10 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "UIColor+Utils.h"
-#import "UIFont+Utils.h"
-#import "UIButton+Utils.h"
-#import "NSMutableAttributedString+Utils.h"
 #import "UITextField+Utils.h"
 #import "NSString+Utils.h"
 #import "UIImageView+Utils.h"
