@@ -35,6 +35,7 @@
 - (void)anchorHeight:(CGFloat)height;
 - (void)anchorWidth:(CGFloat)width;
 - (void)removeAllConstraints;
+- (void)removeConstraints;
 
 // Animation
 - (void)ShowWithAnimation;
