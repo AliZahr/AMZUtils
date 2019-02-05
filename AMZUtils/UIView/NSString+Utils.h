@@ -12,8 +12,12 @@
 @interface NSString (Utils)
 - (int)extractNumber;
 - (NSArray *)extractNumbers;
--(BOOL) IsValidEmail;
--(BOOL) isValidPhoneNumber;
+- (BOOL) IsValidEmail;
+- (BOOL) isValidPhoneNumber;
 - (NSMutableAttributedString*)getColoredPercentageWithColor:(UIColor*)color;
 - (NSString *)urlencode;
+- (NSString *)extractLettersOnlyString;
+- (NSString*)GetNameWithoutSpecialCharacters;
+- (NSString*)trimLeadingTrailingSpaces;
+- (NSString*)hashValue;
 @end

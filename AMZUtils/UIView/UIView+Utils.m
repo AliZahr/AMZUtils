@@ -149,21 +149,14 @@
         [self.widthAnchor constraintEqualToConstant:width].active = YES;
     }
 }
-- (void)removeConstraints
+
+- (void)removeAllConstraints
 {
-    UIView *superview = self.superview;
-    while (superview != nil) {
-        for (NSLayoutConstraint *c in superview.constraints) {
-            if (c.firstItem == self || c.secondItem == self) {
-                [superview removeConstraint:c];
-            }
-        }
-        superview = superview.superview;
-    }
-    
+    [NSLayoutConstraint deactivateConstraints:self.constraints];
     [self removeConstraints:self.constraints];
-    self.translatesAutoresizingMaskIntoConstraints = YES;
 }
+// Animation
+
 - (void)ShowWithAnimation
 {
     UIViewController *topController = [UIApplication sharedApplication].keyWindow.rootViewController;
@@ -235,6 +228,6 @@
     borderShape.fillColor = nil;
     borderShape.lineWidth = width;
     [self.layer addSublayer:borderShape];
-
+    
 }
 @end

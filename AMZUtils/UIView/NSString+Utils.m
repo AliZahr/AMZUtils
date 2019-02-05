@@ -1,12 +1,5 @@
-//
-//  NSString+Utils.m
-//  TemplateApp
-//
-//  Created by Admin on 2/13/18.
-//  Copyright © 2018 MobilePasse. All rights reserved.
-//
-
 #import "NSString+Utils.h"
+#include <CommonCrypto/CommonDigest.h>
 
 @implementation NSString (Utils)
 
@@ -105,6 +98,38 @@
         }
     }
     return output;
+}
+
+- (NSString *)extractLettersOnlyString
+{
+    return [[self componentsSeparatedByCharactersInSet:[NSCharacterSet decimalDigitCharacterSet]] componentsJoinedByString:@" "];
+}
+
+- (NSString*)GetNameWithoutSpecialCharacters
+{
+    NSString *separatorString = @"-";
+    NSString *name = [self componentsSeparatedByString:separatorString].firstObject;
+    
+    return name;
+}
+
+- (NSString*)trimLeadingTrailingSpaces
+{
+    return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+}
+
+- (NSString*)hashValue
+{
+    const char* str = [self UTF8String];
+    unsigned char result[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256(str, strlen(str), result);
+    
+    NSMutableString *ret = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH*2];
+    for(int i = 0; i<CC_SHA256_DIGEST_LENGTH; i++)
+    {
+        [ret appendFormat:@"%02x",result[i]];
+    }
+    return ret;
 }
 
 @end
