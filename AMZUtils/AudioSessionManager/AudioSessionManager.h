@@ -42,6 +42,9 @@ extern NSString *kAudioSessionManagerDevice_Speaker;
 @interface AudioSessionManager : NSObject
 {
     dispatch_queue_t myQueue;
+    
+    BOOL proximityDisabled;
+    BOOL defaultToReceiver;
 }
 @property (nonatomic,weak)      id<AudioSessionManagerDelegate>     delegate;
 
@@ -104,6 +107,8 @@ extern NSString *kAudioSessionManagerDevice_Speaker;
     - speaker 
  */
 - (void)start;
+- (void)startWithProximityDisabled;
+- (void)startWithDefaultToReceiver;
 
 /**
  Removes all observers registered
@@ -114,5 +119,7 @@ extern NSString *kAudioSessionManagerDevice_Speaker;
  Removes monitoring for proximity
  */
 - (void)pause;
+- (BOOL)configureAudioSessionWithDesiredAudioRoute:(NSString *)desiredAudioRoute;
+
 
 @end

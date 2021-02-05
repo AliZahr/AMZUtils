@@ -9,14 +9,14 @@
 @import UIKit;
 
 /**
- * @name UIView+draggable
+ * name UIView+draggable
  * Adds the ability to drag a UIView
  */
 @interface UIView (draggable)
 
 /** The pan gestures that handles the view dragging
  *
- * @param panGesture The tint color of the blurred view. Set to nil to reset.
+ * panGesture The tint color of the blurred view. Set to nil to reset.
  */
 @property (nonatomic) UIPanGestureRecognizer *panGesture;
 
@@ -24,11 +24,11 @@
  A caging area such that the view can not be moved outside
  of this frame.
 
- If @c cagingArea is not @c CGRectZero, and @c cagingArea does not contain the
+ If cagingArea is not CGRectZero, and cagingArea does not contain the
  view's frame then this does nothing (ie. if the bounds of the view extend the
- bounds of @c cagingArea).
+ bounds of cagingArea).
 
- Optional. If not set, defaults to @c CGRectZero, which will result
+ Optional. If not set, defaults to CGRectZero, which will result
  in no caging behavior.
  */
 @property (nonatomic) CGRect cagingArea;
@@ -73,7 +73,7 @@
 
 /** Disable or enable the view dragging
  *
- * @param draggable The boolean that enables or disables the draggable state
+ * draggable The boolean that enables or disables the draggable state
  */
 - (void)setDraggable:(BOOL)draggable;
 

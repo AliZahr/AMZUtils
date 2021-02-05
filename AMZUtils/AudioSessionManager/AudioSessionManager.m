@@ -30,6 +30,7 @@ typedef enum:int
     
 } AudioRoute;
 @interface AudioSessionManager () {    // private
+    
     NSString    *mMode;
     
     BOOL         mBluetoothDeviceAvailable;
@@ -110,9 +111,6 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *err;
     
-    // close down our current session...
-//    [audioSession setActive:NO error:nil];
-    
     if ((mMode == kAudioSessionManagerMode_Record) && !audioSession.inputAvailable) {
         NSLogWarn(@"device does not support recording");
         return NO;
@@ -136,21 +134,28 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
         NSLogWarn(@"unable to set audio session active: %@", err);
         return NO;
     }
-
+    
     if (desiredAudioRoute == kAudioSessionManagerDevice_Speaker) {
         // replace AudiosessionSetProperty (deprecated from iOS7) with AVAudioSession overrideOutputAudioPort
         [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&err];
     }
-
+    
     else
     {
         [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&err];
     }
-    AVAudioSessionRouteDescription *newRoute = [audioSession currentRoute];
-    NSString *newOutput = [[newRoute.outputs objectAtIndex:0] portType];
-    if([newOutput isEqualToString:AVAudioSessionPortBuiltInReceiver])
+    if(!defaultToReceiver)
     {
-        [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&err];
+        AVAudioSessionRouteDescription *newRoute = [audioSession currentRoute];
+        
+        if(newRoute.outputs.count > 0)
+        {
+            NSString *newOutput = [[newRoute.outputs objectAtIndex:0] portType];
+            if([newOutput isEqualToString:AVAudioSessionPortBuiltInReceiver])
+            {
+                [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&err];
+            }
+        }
     }
     // Display our current route...
     NSLogDebug(@"current route: %@", self.audioRoute);
@@ -167,7 +172,7 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
     NSError *err;
     
     // close down our current session...
-//    [audioSession setActive:NO error:nil];
+    //    [audioSession setActive:NO error:nil];
     
     // start a new audio session. Without activation, the default route will always be (inputs: null, outputs: Speaker)
     [audioSession setActive:YES error:nil];
@@ -216,8 +221,18 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
     NSInteger changeReason = [[notification.userInfo objectForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
     
     AVAudioSessionRouteDescription *oldRoute = [notification.userInfo objectForKey:AVAudioSessionRouteChangePreviousRouteKey];
+    NSArray *oldOuputArr = oldRoute.outputs;
+    
+    if(oldOuputArr.count == 0)
+        return;
+    
     NSString *oldOutput = [[oldRoute.outputs objectAtIndex:0] portType];
     AVAudioSessionRouteDescription *newRoute = [audioSession currentRoute];
+    NSArray *output = newRoute.outputs;
+    
+    if(output.count == 0)
+        return;
+    
     NSString *newOutput = [[newRoute.outputs objectAtIndex:0] portType];
     switch (changeReason) {
         case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
@@ -227,17 +242,12 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
                 self.headsetDeviceAvailable = NO;
                 if([self isBluetoothDevice:newOutput])
                     currentRoute = Airpod;
+                
+                else if(defaultToReceiver)
+                    currentRoute = Phone;
+                
                 else
                     currentRoute = Speaker;
-                // Special Scenario:
-                // when headphones are plugged in before the call and plugged out during the call
-                // route will change to {input: MicrophoneBuiltIn, output: Receiver}
-                // manually refresh session and support all devices again.
-//                [audioSession setActive:NO error:nil];
-//                [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionAllowBluetooth error:nil];
-//                [audioSession setMode:AVAudioSessionModeVoiceChat error:nil];
-//                [audioSession setActive:YES error:nil];
-                
             } else if ([self isBluetoothDevice:oldOutput]) {
                 BOOL showBluetooth = NO;
                 // Additional checking for iOS7 devices (more accurate)
@@ -320,7 +330,7 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
         default:
             break;
     }
-//    [self.delegate AudioSessionManagerRouteDidChangeTo:self.audioRoute];
+    //    [self.delegate AudioSessionManagerRouteDidChangeTo:self.audioRoute];
     [self monitorProximity];
 }
 
@@ -332,10 +342,6 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
 
 - (void)redirectAudio
 {
-    if(currentRoute == Airpod)
-    {
-        NSLog(@"Test");
-    }
     AVAudioSessionRouteDescription *currentRoute = [[AVAudioSession sharedInstance] currentRoute];
     NSString *output = [[currentRoute.outputs objectAtIndex:0] portType];
     
@@ -363,39 +369,71 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
         
         if ([output isEqualToString:AVAudioSessionPortBuiltInReceiver]) {
             [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-            [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+            
+            if(!proximityDisabled)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+                });
+            }
         }
         else if ([self isBluetoothDevice:output]) {
-            if([UIDevice currentDevice].proximityState)
-                [UIDevice currentDevice].proximityMonitoringEnabled = YES;
-            else
-                [UIDevice currentDevice].proximityMonitoringEnabled = NO;
+            if(!proximityDisabled)
+            {
+                if([UIDevice currentDevice].proximityState)
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+                    });
+                else
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+                    });
+            }
         }
     }
     else if(currentRoute == Headset)
     {
-        if([UIDevice currentDevice].proximityState)
-            [UIDevice currentDevice].proximityMonitoringEnabled = YES;
-        else
+        if(!proximityDisabled)
         {
-            [UIDevice currentDevice].proximityMonitoringEnabled = NO;
+            if([UIDevice currentDevice].proximityState)
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+                });
+            else
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+                });
+            }
         }
     }
     else if(currentRoute == Speaker)
     {
         [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-        [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+        
+        if(!proximityDisabled)
+            dispatch_async(dispatch_get_main_queue(), ^{
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+                });
+            });
     }
     else if(currentRoute == Phone)
     {
         [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
-        [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+        if(!proximityDisabled)
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+            });
     }
     else
     {
-        [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+        if(!proximityDisabled)
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+            });
     }
-        
+    
 }
 
 - (void)proximityChanged:(NSNotification *)notification
@@ -425,12 +463,25 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
 
 #pragma mark public method
 
-
+- (void)startWithDefaultToReceiver
+{
+    defaultToReceiver = YES;
+    proximityDisabled = YES;
+    [self start];
+}
+- (void)startWithProximityDisabled
+{
+    proximityDisabled = YES;
+    [self start];
+}
 - (void)start
 {
     if(didAddObserver)
     {
-        [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+        if(!proximityDisabled)
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+            });
         return;
     }
     
@@ -439,10 +490,9 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
                                              selector:@selector(proximityChanged:)
                                                  name:@"UIDeviceProximityStateDidChangeNotification"
                                                object:[UIDevice currentDevice]];
-
+    
     if(myQueue == nil)
         myQueue = dispatch_queue_create("AudioKit", nil);
-        
     dispatch_async(myQueue, ^{
         [self detectAvailableDevices];
         
@@ -454,19 +504,23 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
                                                  selector:@selector(currentRouteChanged:)
                                                      name:AVAudioSessionRouteChangeNotification object:nil];
     });
-
+    
 }
 
 - (void)end
 {
     didAddObserver = NO;
-    [UIDevice currentDevice].proximityMonitoringEnabled = NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIDevice currentDevice].proximityMonitoringEnabled = NO;
+    });
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)pause
 {
-    [UIDevice currentDevice].proximityMonitoringEnabled = NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+    });
 }
 
 #pragma mark public methods/properties
@@ -484,6 +538,10 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
 - (NSString *)audioRoute
 {
     AVAudioSessionRouteDescription *currentRoute = [[AVAudioSession sharedInstance] currentRoute];
+    
+    if(currentRoute.outputs.count == 0)
+        return @"Unknown Device";
+    
     NSString *output = [[currentRoute.outputs objectAtIndex:0] portType];
     
     if ([output isEqualToString:AVAudioSessionPortBuiltInReceiver]) {

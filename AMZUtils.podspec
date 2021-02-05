@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'AMZUtils'
-  s.version          = '1.0.7'
+  s.version          = '1.0.8'
   s.summary          = 'AMZUtils is a starter kit that can be used in any project.'
 
   s.description      = <<-DESC
@@ -12,11 +12,11 @@ AMZUtils is a starter kit that can be used in any project. It contains a set of 
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'AliZahr' => 'ali_zahr@hotmail.com' }
   s.source           = { :git => 'https://github.com/AliZahr/AMZUtils.git', :tag => s.version.to_s }
-  s.platform = :ios, '9.0'
+  s.platform = :ios, '11.0'
 
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '9.0'
+  s.ios.deployment_target = '11.0'
 
   s.source_files = 'AMZUtils/**/*'
 
