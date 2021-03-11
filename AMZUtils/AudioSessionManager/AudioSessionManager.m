@@ -330,7 +330,9 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
         default:
             break;
     }
-    //    [self.delegate AudioSessionManagerRouteDidChangeTo:self.audioRoute];
+    if(self.delegate != nil)
+        [self.delegate AudioSessionManagerRouteDidChangeTo:self.audioRoute];
+    
     [self monitorProximity];
 }
 
@@ -413,9 +415,7 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
         
         if(!proximityDisabled)
             dispatch_async(dispatch_get_main_queue(), ^{
-                dispatch_async(dispatch_get_main_queue(), ^{
                     [UIDevice currentDevice].proximityMonitoringEnabled = YES;
-                });
             });
     }
     else if(currentRoute == Phone)
@@ -423,7 +423,9 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
         [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
         if(!proximityDisabled)
             dispatch_async(dispatch_get_main_queue(), ^{
+                dispatch_async(dispatch_get_main_queue(), ^{
                 [UIDevice currentDevice].proximityMonitoringEnabled = YES;
+                });
             });
     }
     else
@@ -436,8 +438,7 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(AudioSessionManager);
     
 }
 
-- (void)proximityChanged:(NSNotification *)notification
-{
+- (void)proximityChanged:(NSNotification *)notification {
     UIDevice *device = [notification object];
     
     if(currentRoute == Airpod)
